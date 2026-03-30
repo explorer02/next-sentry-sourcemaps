@@ -1,4 +1,6 @@
 import * as Sentry from "@sentry/nextjs";
+import { SentryErrorBoundaryDemo } from "@/components/SentryErrorBoundaryDemo";
+import { runSourcemapStackDemo } from "@/lib/sourcemapStackDemo";
 import Head from "next/head";
 import { useEffect, useState } from "react";
 
@@ -90,6 +92,47 @@ export default function Page() {
         >
           <span>Throw Sample Error</span>
         </button>
+
+        <section className="demo-panel" aria-labelledby="sourcemap-client-heading">
+          <h2 id="sourcemap-client-heading">Deep stack (client source maps)</h2>
+          <p className="demo-panel__hint">
+            Several named frames in <code>lib/sourcemapStackDemo.ts</code> —
+            confirm Sentry shows original file names and line numbers.
+          </p>
+          <button
+            type="button"
+            className="demo-panel__secondary"
+            onClick={() => {
+              Sentry.logger.info("Source map demo: client deep stack");
+              runSourcemapStackDemo();
+            }}
+            disabled={!isConnected}
+          >
+            <span>Throw nested client error</span>
+          </button>
+        </section>
+
+        <section className="demo-panel" aria-labelledby="sourcemap-server-heading">
+          <h2 id="sourcemap-server-heading">Deep stack (server source maps)</h2>
+          <p className="demo-panel__hint">
+            Calls <code>/api/sourcemap-stack-demo</code> →{" "}
+            <code>lib/sourcemapStackDemoServer.ts</code>.
+          </p>
+          <button
+            type="button"
+            className="demo-panel__secondary"
+            onClick={async () => {
+              Sentry.logger.info("Source map demo: server deep stack via API");
+              await fetch("/api/sourcemap-stack-demo");
+              setHasSentError(true);
+            }}
+            disabled={!isConnected}
+          >
+            <span>Request API nested error</span>
+          </button>
+        </section>
+
+        <SentryErrorBoundaryDemo />
 
         {hasSentError ? (
           <p className="success">Error sent to Sentry.</p>
@@ -228,6 +271,155 @@ export default function Page() {
         .connectivity-error a {
           color: #FFFFFF;
           text-decoration: underline;
+        }
+
+        .demo-panel {
+          width: 100%;
+          max-width: 520px;
+          padding: 16px;
+          border-radius: 8px;
+          border: 1px solid rgba(24, 20, 35, 0.12);
+          background: rgba(24, 20, 35, 0.02);
+        }
+
+        .demo-panel h2 {
+          margin: 0 0 8px;
+          font-size: 16px;
+          font-family: system-ui, sans-serif;
+          font-weight: 600;
+        }
+
+        .demo-panel__hint {
+          margin: 0 0 12px;
+          font-size: 14px;
+          line-height: 1.45;
+          color: #6E6C75;
+        }
+
+        @media (prefers-color-scheme: dark) {
+          .demo-panel__hint {
+            color: #A49FB5;
+          }
+          .demo-panel {
+            border-color: rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.04);
+          }
+        }
+
+        .demo-panel code {
+          font-size: 13px;
+          padding: 1px 4px;
+          border-radius: 4px;
+          background: rgba(99, 65, 240, 0.12);
+        }
+
+        .demo-panel__secondary {
+          border-radius: 8px;
+          color: white;
+          cursor: pointer;
+          background-color: #3d2d7a;
+          border: none;
+          padding: 0;
+        }
+
+        .demo-panel__secondary > span {
+          display: inline-block;
+          padding: 10px 14px;
+          border-radius: inherit;
+          font-size: 15px;
+          font-weight: 600;
+          line-height: 1;
+          background-color: #5a46b8;
+          border: 1px solid #3d2d7a;
+          transform: translateY(-2px);
+        }
+
+        .demo-panel__secondary:hover > span {
+          transform: translateY(-4px);
+        }
+
+        .demo-panel__secondary:active > span {
+          transform: translateY(0);
+        }
+
+        .demo-panel__secondary:disabled {
+          cursor: not-allowed;
+          opacity: 0.6;
+        }
+
+        .demo-panel__secondary:disabled > span {
+          transform: translateY(0);
+        }
+
+        .demo-panel__fallback {
+          padding: 12px;
+          border-radius: 6px;
+          background: rgba(229, 0, 69, 0.08);
+          border: 1px solid rgba(229, 0, 69, 0.35);
+        }
+
+        .demo-panel__fallback p {
+          font-size: 14px;
+          margin: 0 0 8px;
+        }
+
+        .demo-panel__event-id {
+          font-size: 13px;
+        }
+
+        .demo-panel__pre {
+          margin: 8px 0;
+          padding: 8px;
+          font-size: 12px;
+          overflow: auto;
+          max-height: 160px;
+          border-radius: 4px;
+          background: rgba(0, 0, 0, 0.06);
+          text-align: left;
+        }
+
+        @media (prefers-color-scheme: dark) {
+          .demo-panel__pre {
+            background: rgba(255, 255, 255, 0.08);
+          }
+        }
+
+        .demo-panel__details summary {
+          cursor: pointer;
+          font-size: 13px;
+          margin-bottom: 4px;
+        }
+
+        .demo-panel__reset {
+          margin-top: 8px;
+          padding: 8px 12px;
+          font-size: 14px;
+          font-weight: 600;
+          border-radius: 6px;
+          border: 1px solid #553DB8;
+          background: #7553FF;
+          color: #fff;
+          cursor: pointer;
+        }
+
+        .demo-panel__trigger {
+          padding: 10px 14px;
+          font-size: 15px;
+          font-weight: 600;
+          border-radius: 8px;
+          border: 1px solid #553DB8;
+          background: #7553FF;
+          color: #fff;
+          cursor: pointer;
+        }
+
+        .demo-panel__trigger:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .demo-panel__actions {
+          min-height: 44px;
         }
       `}</style>
     </div>
